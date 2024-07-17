@@ -1,4 +1,5 @@
-#set table(inset: 6pt)
+#set table(inset: 6pt, stroke: 0.4pt)
+#show table.cell.where(y: 0): strong
 
 #let content-to-string(content) = {
   if content.has("text") {
@@ -11,99 +12,76 @@
     " "
   }
 }
-#let conf(
-  title: "TypsT-RACEr",
-  subtitle: none,
-  authors: (),
-  keywords: (),
-  date: none,
-  abstract: none,
-  cols: 1,
-  margin: (x: 1.25in, y: 1.25in),
-  paper: "us-letter",
-  lang: "en",
-  region: "US",
-  font: (),
-  fontsize: 11pt,
-  sectionnumbering: "1.1",
-  doc,
-) = {
-  set document(
-    title: title,
-    author: authors.map(author => content-to-string(author.name)),
-    keywords: keywords,
-  )
-  set page(
-    paper: paper,
-    margin: margin,
-    numbering: "1",
-  )
-  set par(justify: true)
-  set text(
-    lang: lang,
-    region: region,
-    font: font,
-    size: fontsize,
-  )
-  set heading(numbering: sectionnumbering)
-
-  if title != none {
-    align(center)[#block(inset: 2em)[
-        #text(weight: "bold", size: 1.5em)[#title]
-        #(
-          if subtitle != none {
-            parbreak()
-            text(weight: "bold", size: 1.25em)[#subtitle]
-          }
-        )
-      ]]
-  }
-
-  if authors != none and authors != [] {
-    let count = authors.len()
-    let ncols = calc.min(count, 3)
-    grid(
-      columns: (1fr,) * ncols,
-      row-gutter: 1.5em,
-      ..authors.map(author => align(center)[
-        #author.name \
-        #author.affiliation \
-        #author.email
-      ])
-    )
-  }
-
-  if date != none {
-    align(center)[#block(inset: 1em)[
-        #date
-      ]]
-  }
-
-  if abstract != none {
-    block(inset: 2em)[
-      #text(weight: "semibold")[Abstract] #h(1em) #abstract
-    ]
-  }
-
-  if cols == 1 {
-    doc
-  } else {
-    columns(cols, doc)
-  }
+#set document(title: "TypsT-RACEr")
+#set par(justify: true)
+#set text(lang: "en", region: "UK", size: 11pt, spacing: 3pt)
+#show emph: it => {
+  text(it, spacing: 4pt)
 }
-#show: doc => conf(
-  cols: 1,
-  doc,
-)
+#show par: set block(spacing: 14pt)
+#set page(numbering: none)
+
+
+// Add current chapter to page header
+#set page(header: context {
+  let current-page = counter(page).get()
+
+  let all-headings = query(heading.where(level: 1))
+  let is-new-chapter = all-headings.any(m => counter(page).at(m.location()) == current-page)
+  if is-new-chapter {
+    return
+  }
+
+  let previous-headings = query(selector(heading.where(level: 1)).before(here())).filter(h => h.numbering != none)
+
+  if previous-headings.len() == 0 {
+    return
+  }
+  let heading = previous-headings.last()
+
+  str(previous-headings.len()) + "."
+  h(1em)
+  text(upper(heading.body))
+  line(length: 100%)
+})
+
+#set heading(numbering: (..numbers) => {
+  if numbers.pos().len() <= 3 {
+    numbering("1.", ..numbers)
+  }
+})
 
 #show heading.where(level: 1): it => {
   pagebreak()
+  text(it, size: 26pt)
+  v(14pt)
+}
+
+#show heading.where(level: 2): it => {
+  text(it, size: 16pt)
+  v(6pt)
+}
+
+#show figure: it => {
   it
+  v(30pt)
 }
 
 #show outline.entry.where(level: 1): it => {
-  v(14pt, weak: true)
-  strong(it)
+  if it.body.has("children") {
+    let t = it.body.children.first().text
+    if t.starts-with("Table") or t.starts-with("Figure") {
+      text(it, size: 12pt)
+    } else {
+      v(14pt, weak: true)
+      strong(text(it, size: 15pt))
+    }
+  } else {
+    it
+  }
+}
+#show outline.entry.where(level: 2): it => {
+  text(it, size: 12pt)
 }
 
 #let in-outline = state("in-outline", false)
@@ -119,7 +97,60 @@
   long
 })
 
+#let pre = math.italic("prestate")
+#let post = math.italic("poststate")
+#let colls = math.italic("collisions")
+#let changedKeys = math.italic("changed_keys")
+
+
+#align(center)[
+  #text(30pt)[*T-RACE*]
+
+  Othmar Lechner
+])
+
+#heading("Erklärung zur Verfassung der Arbeit", outlined: false, numbering: none)
+
+Othmar Lechner
+
+#v(2em)
+
+Hiermit erkläre ich, dass ich diese Arbeit selbständig verfasst habe, dass ich die verwendeten Quellen und Hilfsmittel vollständig angegeben habe und dass ich die Stellen der Arbeit $dash.fig$ einschließlich Tabellen, Karten und Abbildungen $dash.fig$, die anderen Werken oder dem Internet im Wortlaut oder dem Sinn nach entnommen sind, auf jeden Fall unter Angabe der Quelle als Entlehnung kenntlich gemacht habe.
+
+Ich erkläre weiters, dass ich mich generativer KI-Tools lediglich als Hilfsmittel bedient habe und in der vorliegenden Arbeit mein gestalterischer Einfluss überwiegt. Im Anhang „Übersicht verwendeter Hilfsmittel“ habe ich alle generativen KI-Tools gelistet, die ver- wendet wurden, und angegeben, wo und wie sie verwendet wurden. Für Textpassagen, die ohne substantielle Änderungen übernommen wurden, habe ich jeweils die von mir formu- lierten Eingaben (Prompts) und die verwendete IT-Anwendung mit ihrem Produktnamen und Versionsnummer/Datum angegeben.
+
+#v(20em)
+
+#box(
+  height: 68pt,
+  columns(2, gutter: 11pt)[
+    #align(left)[Wien, 1. Jänner 1234]
+    #colbreak()
+    #align(right)[
+      #align(center)[
+        #v(1em)
+        #line(length: 50%)
+        Othmar Lechner
+      ]
+    ]
+  ],
+)
+
+#heading("Acknowledgements", outlined: false, numbering: none)
+
+
+#heading("Danksagung", outlined: false, numbering: none)
+
+
+#heading("Abstract", outlined: false, numbering: none)
+
+
+#heading("Kurzfassung", outlined: false, numbering: none)
+
 #outline(depth: 2, indent: auto)
+
+#set page(numbering: "1")
+#counter(page).update(1)
 
 = Introduction
 <introduction>
@@ -215,21 +246,23 @@ A different approach, the Proposer-Builder Separation (PBS) has become more popu
 <transaction-execution>
 In Ethereum, transaction execution is deterministic. @wood_ethereum_2024[p.9] Transactions can access the world state and their block environment, therefore their execution can depend on these values. After executing a transaction, the world state is updated accordingly.
 
-We denote a transaction execution as $sigma arrow.r^T sigma prime$, implicitly letting the block environment correspond to the transaction’s block. Furthermore, we denote the state change by a transaction $T$ as $Delta_T$, with $italic("prestate")(Delta_T) = sigma$ being the world state before execution and $italic("poststate")(Delta sigma_T) = sigma prime$ the world state after the execution of $T$.
+We denote a transaction execution as $sigma arrow.r^T sigma prime$, implicitly letting the block environment correspond to the transaction’s block. Furthermore, we denote the state change by a transaction $T$ as $Delta_T$, with $pre(Delta_T) = sigma$ being the world state before execution and $post(Delta sigma_T) = sigma prime$ the world state after the execution of $T$.
+
+We denote a transaction execution as $sigma arrow.r^T sigma prime$, implicitly letting the block environment correspond to the transaction’s block. Furthermore, we denote the state change by a transaction $T$ as $Delta_T$, with $pre(Delta_T) = sigma$ being the world state before execution and $post(Delta sigma_T) = sigma prime$ the world state after the execution of $T$.
 
 For two state changes $Delta_(T_A)$ and $Delta_(T_B)$, we say that $Delta_(T_A) = Delta_(T_B)$ if they changed the same set of state fields and the pre- and poststate for these changed fields is equal, otherwise $Delta_(T_A) eq.not Delta_(T_B)$. For instance, if both $Delta_(T_A)$ and $Delta_(T_B)$ modified only the storage slot $sigma (a)_s [k]$, and both changed it from the value $x$ to the value $y$, we would call them equal. If $Delta_(T_B)$ changed it from $x prime$ to $y$, or from $x$ to $y prime$ or even modified a different storage slot $sigma (a)_s [k prime]$, we would say $Delta_(T_A) eq.not Delta_(T_B)$.
 
 We define the set of changed state keys as:
 
-$italic("changed_keys")(Delta) colon.eq {K \| italic("prestate")(Delta)(K) eq.not italic("poststate")(Delta) (K)}$
+$changedKeys(Delta) colon.eq {K \| pre(Delta)(K) eq.not post(Delta) (K)}$
 
 We let the equality $Delta_(T_A) = Delta_(T_B)$ be true if following holds, else $Delta_(T_A) eq.not Delta_(T_B)$:
 
 $
-  italic("changed_keys")(Delta_(T_A)) & = italic("changed_keys")(Delta_(T_B))\
-  forall K in italic("changed_keys"):
-  & italic("prestate")(Delta_(T_A)) (K) = italic("prestate")(Delta_(T_B)) (K)\
-  upright(" and ") & italic("poststate")(Delta_(T_B)) (K) = italic("poststate")(Delta_(T_B)) (K)
+  changedKeys(Delta_(T_A)) & = changedKeys(Delta_(T_B))\
+  forall K in changedKeys:
+  & pre(Delta_(T_A)) (K) = pre(Delta_(T_B)) (K)\
+  upright(" and ") & post(Delta_(T_B)) (K) = post(Delta_(T_B)) (K)
 $
 
 We define $sigma + Delta_T$ to be equal to the state $sigma$, except that every state that was changed by the execution of $T$ is overwritten with the value in $p o s t s t a t e (Delta_T)$. Similarly, $sigma - Delta_T$ is equal to the state $sigma$, except that every state that was changed by the execution of $T$ is overwritten with the value in $p r e s t a t e (Delta_T)$. Formally, these definitions are as follows:
@@ -238,13 +271,13 @@ $
   (sigma + Delta_T) (
     K
   ) & colon.eq cases(
-    italic("poststate")(Delta_T) (K) & "if"  K in italic("changed_keys")(Delta_T),
+    post(Delta_T) (K) & "if"  K in changedKeys(Delta_T),
     sigma (K) & upright("otherwise")
   )\
   (sigma - Delta_T) (
     K
   ) & colon.eq cases(
-    italic("prestate")(Delta_T) (K) & "if" K in italic("changed_keys")(Delta_T),
+    pre(Delta_T) (K) & "if" K in changedKeys(Delta_T),
     sigma (K) &"otherwise"
   )
 $
@@ -390,7 +423,7 @@ Intuitively, we take the world state exactly before $T_B$ was executed, namely $
 
 We chose to compare the two executions on the state changes $Delta_(T_B) eq.not Delta_(T_B prime)$, rather than on the resulting states $sigma_B eq.not sigma_B prime$, to detect a wider range of TODs. Comparing on $sigma_B eq.not sigma_B prime$ would be sufficient to detect #emph[write-read] TODs, where the first transaction writes some state and the second transaction accesses this state and outputs a different result because of this. However, we are also interested into #emph[write-write] TODs, where $T_A$ writes some state and $T_B$ overwrites the same state with a different value, thus hiding the change by $T_A$.
 
-For example, let $T_A$ write the value 'aaaa' to some storage, s.t. we have $sigma_(X_n) (a)_s [k] = "'aaaa'"$, and $T_B$ write 'bbbb' to the same storage, s.t. we have $sigma_B (a)_s [k] = "'bbbb'"$. When executing $T_B$ last, the world state would have 'bbbb' at this storage slot, and when executing $T_A$ last, it would be 'aaaa'. Therefore, the resulting world state is dependent on the order of $T_A$ and $T_B$. To check for this case, we compare the prestates of each change in $Delta_(T_B)$ and $Delta_(T_B prime)$. In our example, when executing $T_B$ on $sigma_(X_n)$ we would have $italic("prestate")(Delta_(T_B)) (a)_s [k] = "'aaaa'"$ (as the changes from $T_A$ are included in this scenario), but when executing on $sigma_(X_n) - Delta_(T_A)$ we have $italic("prestate")(Delta_(T_B prime)) (a)_s [k] = "'0000'"$ (as the changes from $T_A$ are undone in this scenario). Therefore, checking for inequality between the prestates from the state changes $Delta_(T_B)$ and $Delta_(T_B prime)$ can detect write-write TODs.
+For example, let $T_A$ write the value 'aaaa' to some storage, s.t. we have $sigma_(X_n) (a)_s [k] = "'aaaa'"$, and $T_B$ write 'bbbb' to the same storage, s.t. we have $sigma_B (a)_s [k] = "'bbbb'"$. When executing $T_B$ last, the world state would have 'bbbb' at this storage slot, and when executing $T_A$ last, it would be 'aaaa'. Therefore, the resulting world state is dependent on the order of $T_A$ and $T_B$. To check for this case, we compare the prestates of each change in $Delta_(T_B)$ and $Delta_(T_B prime)$. In our example, when executing $T_B$ on $sigma_(X_n)$ we would have $pre(Delta_(T_B)) (a)_s [k] = "'aaaa'"$ (as the changes from $T_A$ are included in this scenario), but when executing on $sigma_(X_n) - Delta_(T_A)$ we have $pre(Delta_(T_B prime)) (a)_s [k] = "'0000'"$ (as the changes from $T_A$ are undone in this scenario). Therefore, checking for inequality between the prestates from the state changes $Delta_(T_B)$ and $Delta_(T_B prime)$ can detect write-write TODs.
 
 Our definition does not include #emph[read-write] TODs, i.e. we do not check whether executing $T_B$ before $T_A$ would have an impact on $T_A$. We focus on detecting TOD attacks, in which the attacker tries to insert a transaction prior to some transaction $T$ and impact the behaviour of $T$ with this. Therefore, we assume that the first transaction tries to impact the second transaction, and not ignore the other way round.
 
@@ -436,13 +469,13 @@ We denote state accesses by a transaction $T$ as a set of state keys $R_T = { K_
 
 We define the state collisions of two transactions as:
 
-$italic("collisions")(T_A , T_B) = (W_(T_A) sect R_(T_B)) union (W_(T_A) sect W_(T_B))$
+$ colls(T_A , T_B) = (W_(T_A) sect R_(T_B)) union (W_(T_A) sect W_(T_B)) $
 
 With $W_(T_A) sect R_(T_B)$ we include write-read collisions, where $T_A$ modifies some state and $T_B$ accesses the same state. With $W_(T_A) sect W_(T_B)$ we include write-write collisions, where both transactions write to the same state location, for instance to the same storage slot. We do not include $R_(T_A) sect W_(T_B)$, as we also did not include read-write TOD in our TOD defintion.
 
 == TOD candidates
 <tod-candidates>
-We will refer to a transaction pair $(T_A , T_B)$, where $T_A$ was executed before $T_B$ and $italic("collisions")(T_A , T_B) eq.not nothing$ as a TOD candidate.
+We will refer to a transaction pair $(T_A , T_B)$, where $T_A$ was executed before $T_B$ and $colls(T_A , T_B) eq.not nothing$ as a TOD candidate.
 
 A TOD candidate is not necessarily TOD, for instance consider the case that $T_B$ only reads the value that $T_A$ wrote but never uses it for any computation. This would be a TOD candidate, as they have a collision, however the result of executing $T_B$ is not impacted by this collision.
 
@@ -458,9 +491,9 @@ This section discusses, what can cause two transactions $T_A$ and $T_B$ to have 
 <causes-with-code-execution>
 When the recipient of a transaction is a contract account, it will execute the recipient’s code. The code execution can access and modify the state through several instructions. By inspecting the EVM instruction definitions @wood_ethereum_2024[p.30-38]@smlxl_evm_2024, we compiled a list of instructions that can access and modify the world state.
 
-In table @tab:state_reading_instructions we see the instructions, that can access the world state. For most, the reason of the access is clear, for instance `BALANCE` needs to access the balance of the target address. Less obvious is the nonce access of several instructions, which is because the EVM uses the nonce (among other things) to check if an account already exists@wood_ethereum_2024[p.4]. For CALL, CALLCODE and SELFDESTRUCT, this is used to calculate the gas costs. @wood_ethereum_2024[p.37-38] For CREATE and CREATE2, this is used to prevent creating an account at an already active address @wood_ethereum_2024[p.11]#footnote[In the Yellowpaper, the check for the existence of the recipient for CALL, CALLCODE and SELFDESTRUCT is done via the #emph[DEAD] function. For CREATE and CREATE2, this is done in the F condition at equation (113).].
+In @tab:state_reading_instructions we see the instructions, that can access the world state. For most, the reason of the access is clear, for instance `BALANCE` needs to access the balance of the target address. Less obvious is the nonce access of several instructions, which is because the EVM uses the nonce (among other things) to check if an account already exists@wood_ethereum_2024[p.4]. For `CALL`, `CALLCODE` and `SELFDESTRUCT`, this is used to calculate the gas costs. @wood_ethereum_2024[p.37-38] For `CREATE` and `CREATE2`, this is used to prevent creating an account at an already active address @wood_ethereum_2024[p.11]#footnote[In the Yellowpaper, the check for the existence of the recipient for `CALL`, `CALLCODE` and `SELFDESTRUCT` is done via the `DEAD` function. For `CREATE` and `CREATE2`, this is done in the `F` condition at equation (113).].
 
-In table @tab:state_writing_instructions we see instructions that can modify the world state.
+In @tab:state_writing_instructions we see instructions that can modify the world state.
 
 #block[
   #block[
@@ -570,7 +603,7 @@ We store all the accesses and modifications in a database and then query for acc
 <tod-candidate-filtering>
 Many of the TOD candidates from the previous section are not relevant for our further analysis. To prevent unnecessary computation and distortion of our results, we define which TOD candidates are not relevant and then filter them out.
 
-A summary of the filters is given in table @tab:tod_candidate_filters and more detailed explanations are in the following sections. The filters are executed in the same order as they are presented in the table and always operate on the output from the previous filter. The only exception is the "Same-value collision" filter, which is directly incorporated into the initial collisions query for performance reasons.
+A summary of the filters is given in @tab:tod_candidate_filters and more detailed explanations are in the following sections. The filters are executed in the same order as they are presented in the table and always operate on the output from the previous filter. The only exception is the "Same-value collision" filter, which is directly incorporated into the initial collisions query for performance reasons.
 
 The "Block windows", "Same senders" and "Recipient Ether transfer" filters have already been used in @zhang_erebus-redgiant_2023. The filters "Nonce and code collision" and "Indirect dependency" followed directly from our previous theoretical arguments. Further, we also applied an iterative approach, where we searched for TOD candidates in a sample block range and manually analyzed if some of these TOD candidates could be filtered. This led us to the "Same-value collisions" and the "Block validators" filter.
 
@@ -610,13 +643,13 @@ When we have many transactions that modify the same state, e.g. the balance of t
 To reduce this growth of TOD candidates, we also require for a collision, that $T_A$ writes exactly the value that is read or overwritten by $T_B$. Formally, following must hold to pass this filter:
 
 $
-  forall K in italic("collisins")(T_A , T_B) :
-  italic("poststate")(Delta_(T_A)) (K) = italic("prestate")(Delta_(T_B)) (K)
+  forall K in colls(T_A , T_B) :
+  post(Delta_(T_A)) (K) = pre(Delta_(T_B)) (K)
 $
 
 With the example of 100 transactions modifying the balance of address $a$, when the first transaction sets to balance to 1234, it would only have a write-write conflict with transactions where the balance of $a$ was exactly 1234 before the execution. If all transactions wrote different balances, this would reduce the amount of TOD candidates to $n - 1 = 99$.
 
-Apart from the performance benefit, this filter also removes many TOD candidates that are potentially indirect dependent. For instance, let us assume that we removed the TOD candidate $(T_A , T_B)$. By definition of this filter, there must be some key $K$ with $italic("poststate")(Delta_(T_A)) (K) eq.not italic("prestate")(Delta_(T_B)) (K)$, thus some transaction $T_X$ must have modified the state at $K$ between $T_A$ and $T_B$. Therefore, we would also have a collision (and TOD candidate) between $T_A$ and $T_X$, and between $T_X$ and $T_B$. This would be a potential indirect dependency, which could lead to unexpected results as argued in section @sec:weaknesses.
+Apart from the performance benefit, this filter also removes many TOD candidates that are potentially indirect dependent. For instance, let us assume that we removed the TOD candidate $(T_A , T_B)$. By definition of this filter, there must be some key $K$ with $post(Delta_(T_A)) (K) eq.not pre(Delta_(T_B)) (K)$, thus some transaction $T_X$ must have modified the state at $K$ between $T_A$ and $T_B$. Therefore, we would also have a collision (and TOD candidate) between $T_A$ and $T_X$, and between $T_X$ and $T_B$. This would be a potential indirect dependency, which could lead to unexpected results as argued in section @sec:weaknesses.
 
 ==== Block windows
 <block-windows>
@@ -640,7 +673,7 @@ As argued in section @sec:weaknesses, indirect dependencies can cause unexpected
 
 We already have a model of all direct (potential) dependencies with the TOD candidates. We can build a transaction dependency graph $G = (V , E)$ with $V$ being all transactions and $E = { (T_A , T_B) divides (T_A , T_B) in upright("TOD candidates") }$. We then filter out all TOD candidates $(T_A , T_B)$ where there exists a path $T_A , T_(X_1) , dots.h , T_(X_n) , T_B$ with at least one intermediary node $T_(X_i)$.
 
-Figure @fig:tod_candidate_dependency shows an example dependency graph, where transaction $A$ influences both $X$ and $B$ and $B$ is influenced by all other transactions. We would filter out the candidate $(A , B)$ as there is a path $A arrow.r X arrow.r B$, but keep $(X , B)$ and $(C , B)$.
+@fig:tod_candidate_dependency shows an example dependency graph, where transaction $A$ influences both $X$ and $B$ and $B$ is influenced by all other transactions. We would filter out the candidate $(A , B)$ as there is a path $A arrow.r X arrow.r B$, but keep $(X , B)$ and $(C , B)$.
 
 // TODO: figure, see https://typst.app/universe/package/cetz/
 #figure(
@@ -675,7 +708,7 @@ We can also see that 93% of the running time was spent fetching the data via the
 
 === Filters
 <filters-1>
-In table @tab:experiment_filters we can see the number of TOD candidates before and after each filter, showing how many candidates were filtered at each stage. This shows the importance of filtering, as we reduced the number of TOD candidates to analyze from more than 60 millions to only 8,127.
+In @tab:experiment_filters we can see the number of TOD candidates before and after each filter, showing how many candidates were filtered at each stage. This shows the importance of filtering, as we reduced the number of TOD candidates to analyze from more than 60 millions to only 8,127.
 
 Note, that this does not directly imply, that "Same-value collision" filters out more TOD candidates than "Block windows", as they operated on different sets of TOD candidates. Even if "Block windows" would filter out every TOD candidate, this would be less than "Same-value collision" did, because of the order of filter application.
 
@@ -697,7 +730,10 @@ Note, that this does not directly imply, that "Same-value collision" filters out
           [Same senders], [9,940], [6,295],
           [Recipient Ether transfer], [8,127], [1,813],
         )],
-      caption: flex-caption([This table shows the application of all filters used to reduce the number of TOD candidates. Filters were applied from top to bottom and each row shows how many TOD candidates remained and were filtered. The unfiltered value is a lower bound, as we only calculated this number afterwards, and the calculation does not include write-write collisions.],[TOD candidate filters evaluation]),
+      caption: flex-caption(
+        [This table shows the application of all filters used to reduce the number of TOD candidates. Filters were applied from top to bottom and each row shows how many TOD candidates remained and were filtered. The unfiltered value is a lower bound, as we only calculated this number afterwards, and the calculation does not include write-write collisions.],
+        [TOD candidate filters evaluation],
+      ),
       kind: table,
     )
     <tab:experiment_filters>
@@ -709,13 +745,16 @@ After applying the filters, 7864 transactions are part of at least one TOD candi
 
 === Block distance
 <block-distance>
-In figure @fig:tod_block_dist we can see, that most TOD candidates are within the same block. Morevoer, the further two transactions are apart, the less likely we include them as a TOD candidate. A reason for this could be, that having many intermediary transactions makes it more likely to be filtered by our "Indirect dependency" filter. Nonetheless, we can conclude that when using our filters, the block window could be reduced even further without missing many TOD candidates.
+In @fig:tod_block_dist we can see, that most TOD candidates are within the same block. Morevoer, the further two transactions are apart, the less likely we include them as a TOD candidate. A reason for this could be, that having many intermediary transactions makes it more likely to be filtered by our "Indirect dependency" filter. Nonetheless, we can conclude that when using our filters, the block window could be reduced even further without missing many TOD candidates.
 
 #figure(
   image("charts/tod_candidates_block_dist.png", width: 80%),
-  caption: flex-caption([
-    The histogram and eCDF of the block distance for TOD candidates. The blue bars show how many TOD candidates have been found, where $T_A$ and $T_B$ are n blocks apart. The orange line shows the percentage of TOD candidates, that are at most n blocks apart.
-  ], [Block distances of TOD candidates])
+  caption: flex-caption(
+    [
+      The histogram and eCDF of the block distance for TOD candidates. The blue bars show how many TOD candidates have been found, where $T_A$ and $T_B$ are n blocks apart. The orange line shows the percentage of TOD candidates, that are at most n blocks apart.
+    ],
+    [Block distances of TOD candidates],
+  ),
 )
 <fig:tod_block_dist>
 
@@ -732,13 +771,16 @@ are responsible for 43.0% of all collisions. In total, the collisions occur in o
 
 One goal of this paper is to create a diverse set of attacks for our benchmark. With such a strong imbalance towards a few contracts, it will take a long time to analyze TOD candidates related to these frequent addresses, and the attacks are more likely related and do not cover a wide range of attack types. To prevent this, we may filter out duplicate addresses for collisions.
 
-Figure @fig:collsions_address_limit depicts, how many collisions we would get when we only consider the first $n$ collisions for each address. If we set the limit to one collision per address, we would end up with 1472 collisions, which is exactly the number of unique addresses where collisions happened. When we keep 10 collisions per address, we would get 3964 collisions. Such a scenario would already reduce the amount of collisions by 73%, while still retaining a sample of 10 collisions for each address, that could cover different types of TOD attacks.
+@fig:collsions_address_limit depicts, how many collisions we would get when we only consider the first $n$ collisions for each address. If we set the limit to one collision per address, we would end up with 1472 collisions, which is exactly the number of unique addresses where collisions happened. When we keep 10 collisions per address, we would get 3964 collisions. Such a scenario would already reduce the amount of collisions by 73%, while still retaining a sample of 10 collisions for each address, that could cover different types of TOD attacks.
 
 #figure(
   image("charts/collisions_limited_per_address.png", width: 80%),
-  caption: flex-caption([
-    The chart shows, how many collisions we have, when we limit the number of collisions we include per address. For instance, if we only include 10 collisions for each address we would end up with about 4000 collisions.
-  ],[Limit for collisions per address])
+  caption: flex-caption(
+    [
+      The chart shows, how many collisions we have, when we limit the number of collisions we include per address. For instance, if we only include 10 collisions for each address we would end up with about 4000 collisions.
+    ],
+    [Limit for collisions per address],
+  ),
 )
 <fig:collsions_address_limit>
 
@@ -778,9 +820,7 @@ The experiments were performed on Ubuntu 22.04.04, using an AMD Ryzen 5 5500U CP
 
 For the RPC requests we used a public endpoint@noauthor_pokt_2024, which uses Erigon@noauthor_rpc_2024 according to the `web3_clientVersion` RPC method. We used a local cache to prevent repeating slow RPC requests. @fuzzland_eth_2024 Unless otherwise noted, the cache was initially empty for experiments that measure the running time.
 
-#pagebreak()
-
-#heading("Overview of Generative AI Tools Used",  numbering: none)
+#heading("Overview of Generative AI Tools Used", numbering: none)
 
 No generative AI tools where used in the process of researching and writing this thesis.
 
@@ -795,4 +835,4 @@ No generative AI tools where used in the process of researching and writing this
 )
 
 // TODO: why is Frontrunner "online" for usenix?
-#bibliography("refs.bib")
+#bibliography("refs.bib", style: "ieee")
