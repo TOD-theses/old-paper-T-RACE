@@ -2,18 +2,6 @@
 
 #set table(inset: 6pt, stroke: 0.4pt)
 #show table.cell.where(y: 0): strong
-
-#let content-to-string(content) = {
-  if content.has("text") {
-    content.text
-  } else if content.has("children") {
-    content.children.map(content-to-string).join("")
-  } else if content.has("body") {
-    content-to-string(content.body)
-  } else if content == [ ] {
-    " "
-  }
-}
 #set document(title: "TypsT-RACEr")
 #set par(justify: true)
 #set text(lang: "en", region: "UK", size: 11pt, spacing: 3pt)
@@ -22,6 +10,10 @@
 }
 #show par: set block(spacing: 14pt)
 #set page(numbering: none)
+
+#let todo(content) = {
+  text("[TODO: " + content + "]", fill: red)
+}
 
 
 // Add current chapter to page header
@@ -318,6 +310,8 @@ We will refer to the execution order $T_A arrow.r T_B$, the one that occurred on
 <motivating-examples>
 TBD.
 
+#todo("Add a motivating example for write-read TOD (e.g.  TOD-recipient) and for write-write TOD (e.g. ERC-20 approval).")
+
 == Relation to previous works
 <relation-to-previous-works>
 In @torres_frontrunner_2021 the authors do not provide a formal definition of TOD. However, for displacement attacks, they include the following check to detect if two transactions fall into this category:
@@ -328,6 +322,7 @@ In @torres_frontrunner_2021 the authors do not provide a formal definition of TO
 
 Similar to our intuitive TOD definition, they execute $T_A$ and $T_V$ in different orders and check if it affects the result. In their case, they only check the number of executed instruction, instead of the resulting state. This would miss attacks where the same instructions were executed, but the operands for these instructions in the second transaction changed because of the first transaction.
 
+#todo("Reference the frontrunning sections, when it's written")
 In @zhang_combatting_2023, they define an attack as a triple $A = angle.l T_a , T_v , T_a^p angle.r$, where $T_a$ and $T_v$ are similar to the $T_A$ and $T_B$ from our definition, and $T_a^p$ is an optional third transaction. They consider the execution orders $T_a arrow.r T_v arrow.r T_a^p$ and $T_v arrow.r T_a arrow.r T_a^p$. They monitor the transactions to check if the execution order impacts financial gains, which we will discuss later in more detail.
 
 We note that if these two execution orders result in different states, this is not because of the last transaction $T_a^p$, but because of a TOD between $T_a$ and $T_v$. As we always execute $T_a^p$, and transaction execution is deterministic, it only gives a different result if the execution of $T_a$ and $T_v$ gave a different result. Therefore, if the execution order results in different financial gains, then $T_a$ and $T_v$ must be TOD.
@@ -365,6 +360,8 @@ In @zhang_combatting_2023, this impact of the intermediary transactions is ackno
 ]
 
 Nonetheless, it is not clear, which of the above scenarios they applied for their analysis. The other work, @torres_frontrunner_2021, does not mention this issue at all.
+
+#todo("Consider to move the code analysis to an appendix")
 
 ==== Code analysis of @zhang_combatting_2023
 <code-analysis-of>
@@ -413,6 +410,7 @@ Similar to the case with the block environment, this could lead to differences b
 To address the issues above, we will provide a more precise definition for TOD.
 
 // TODO: Check if there is a more typst way to do this
+#todo("Check if there is a more typst way to do this")
 #block[
   #strong[Definition 3.1] (TOD). #emph[Consider a sequence of transactions, with $sigma$ being the world state right before $T_A$ was executed on the blockchain:]
 
@@ -564,6 +562,8 @@ Some state accesses and modifications are inherent to transaction execution. To 
 
 === Relevant collisions for attacks
 <sec:relevant-collisions>
+
+#todo("Reference papers, that only used storage and balance without arguing why")
 The previous sections list possible ways to access and modify the world state. Many previous studies have focused on storage and balance collisions, however they did not discuss if or why code and nonce collisions are not important. Here, we try to argue, why only storage and balance collisions are relevant for TOD attacks and code and nonce collisions can be neglected.
 
 The idea of an TOD attack is, that an attacker impacts the execution of some transaction $T_B$, by placing a transaction $T_A$ before it. To have some impact, there must be a write-write or write-read collisions between $T_A$ and $T_B$. Therefore, our scenario is that we start from some (vicim) transaction $T_B$ and try to create impactful collisions with a new transaction $T_B$. We assume some set $A$ to be the set of codes and nonces that $T_B$ accesses and writes.
@@ -578,6 +578,8 @@ Therefore, the remaining attack vectors are `SSTORE`, to modify the storage of a
 <everything-is-tod>
 Our definition of TOD is very broad and marks many transaction pairs as TOD. For instance, if a transaction $T_B$ uses some storage value for a calculation, then the execution likely depends on the transaction that previously has set this storage value. Similarly, when someone wants to transfer Ether, they can only do so when they first received that Ether. Thus, they are dependent on some transaction that gave them this Ether previously.
 
+#todo("What about block rewards?")
+
 #block[
   #strong[Theorem 3.1]. #emph[For every transaction $T_B$ after the London upgrade#footnote[#emph[We reference the London upgrade here, as this introduced the base fee for transactions.]], there exists a transaction $T_A$ such that $(T_A , T_B)$ is TOD.]
 
@@ -588,6 +590,8 @@ Our definition of TOD is very broad and marks many transaction pairs as TOD. For
   When we calculate $sigma - Delta_(T_A)$ for our TOD definition, we would set the balance of $s e n d e r$ to $p r e s t a t e (Delta_(T_A)) (s e n d e r)_b < v_0$ and then execute $T_B$ based on this state. In this case, $T_B$ would be invalid, as the $s e n d e r$ would not have enough Ether to cover the upfront cost.~◻
 
 ]
+
+#todo("Check formulation when frontrunning sections are written")
 
 Given this property, it is clear that TOD alone is not a useful attack indicator, else we would say that every transaction has been attacked. In the following, we provide some more restrictive definitions.
 
@@ -673,6 +677,9 @@ We showed in @sec:relevant-collisions, that nonce and code collisions are not re
 
 ==== Indirect dependency
 <indirect-dependency>
+
+#todo("Do we simply want to remove everything but the smallest TOD candidates instead? Would be more clean, but remove many more TOD candidates")
+
 As argued in @sec:weaknesses, indirect dependencies can cause unexpected results in our analysis, therefore we will filter TOD candidates that have an indirect dependency. We will only consider the case, where the indirect dependency is already visible in the normal order and accept that we potentially miss some indirect dependencies. Alternatively, we could also remove a TOD candidate $(T_A , T_B)$ when we also have the TOD candidate $(T_A , T_X)$, however this would remove many more TOD candidates.
 
 We already have a model of all direct (potential) dependencies with the TOD candidates. We can build a transaction dependency graph $G = (V , E)$ with $V$ being all transactions and $E = { (T_A , T_B) divides (T_A , T_B) in "TOD candidates" }$. We then filter out all TOD candidates $(T_A , T_B)$ where there exists a path $T_A , T_(X_1) , dots.h , T_(X_n) , T_B$ with at least one intermediary node $T_(X_i)$.
@@ -697,7 +704,10 @@ We already have a model of all direct (potential) dependencies with the TOD cand
       )
     ]
   ],
-  caption: flex-caption([ Indirect dependency graph. An arrow from x to y indicates that y depends on x. A dashed arrow indicates an indirect dependency. ], [Indirect dependency graph]),
+  caption: flex-caption(
+    [ Indirect dependency graph. An arrow from x to y indicates that y depends on x. A dashed arrow indicates an indirect dependency. ],
+    [Indirect dependency graph],
+  ),
 )
 <fig:tod_candidate_dependency>
 
