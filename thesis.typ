@@ -126,11 +126,10 @@ Ich erkläre weiters, dass ich mich generativer KI-Tools lediglich als Hilfsmitt
 #box(
   height: 68pt,
   columns(2, gutter: 11pt)[
-    #align(left)[Wien, 1. Jänner 1234]
+    #align(left)[Wien, #datetime.today().display("[day].[month].[year]")]
     #colbreak()
     #align(right)[
       #align(center)[
-        #v(1em)
         #line(length: 50%)
         Othmar Lechner
       ]
