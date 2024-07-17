@@ -47,11 +47,14 @@
   line(length: 100%)
 })
 
-#set heading(numbering: (..numbers) => {
-  if numbers.pos().len() <= 3 {
-    numbering("1.", ..numbers)
-  }
-})
+// not using numbering function, as this caused a trailing dot
+// https://github.com/typst/typst/discussions/4574
+// #set heading(numbering: (..numbers) => {
+//   if numbers.pos().len() <= 3 {
+//     numbering("1.", ..numbers)
+//   }
+// })
+#set heading(numbering: "1.")
 
 #show heading.where(level: 1): it => {
   pagebreak()
@@ -650,7 +653,7 @@ $
 
 With the example of 100 transactions modifying the balance of address $a$, when the first transaction sets to balance to 1234, it would only have a write-write conflict with transactions where the balance of $a$ was exactly 1234 before the execution. If all transactions wrote different balances, this would reduce the amount of TOD candidates to $n - 1 = 99$.
 
-Apart from the performance benefit, this filter also removes many TOD candidates that are potentially indirect dependent. For instance, let us assume that we removed the TOD candidate $(T_A , T_B)$. By definition of this filter, there must be some key $K$ with $post(Delta_(T_A)) (K) eq.not pre(Delta_(T_B)) (K)$, thus some transaction $T_X$ must have modified the state at $K$ between $T_A$ and $T_B$. Therefore, we would also have a collision (and TOD candidate) between $T_A$ and $T_X$, and between $T_X$ and $T_B$. This would be a potential indirect dependency, which could lead to unexpected results as argued in section @sec:weaknesses.
+Apart from the performance benefit, this filter also removes many TOD candidates that are potentially indirect dependent. For instance, let us assume that we removed the TOD candidate $(T_A , T_B)$. By definition of this filter, there must be some key $K$ with $post(Delta_(T_A)) (K) eq.not pre(Delta_(T_B)) (K)$, thus some transaction $T_X$ must have modified the state at $K$ between $T_A$ and $T_B$. Therefore, we would also have a collision (and TOD candidate) between $T_A$ and $T_X$, and between $T_X$ and $T_B$. This would be a potential indirect dependency, which could lead to unexpected results as argued in @sec:weaknesses.
 
 ==== Block windows
 <block-windows>
@@ -666,11 +669,11 @@ We exclude TOD candidates, where the only collision is the balance of any block 
 
 ==== Nonce and Code collisions
 <nonce-and-code-collisions>
-We showed in section @sec:relevant-collisions, that nonce and code collisions are not relevant for TOD attacks. Therefore, we ignore collisions for this state type.
+We showed in @sec:relevant-collisions, that nonce and code collisions are not relevant for TOD attacks. Therefore, we ignore collisions for this state type.
 
 ==== Indirect dependency
 <indirect-dependency>
-As argued in section @sec:weaknesses, indirect dependencies can cause unexpected results in our analysis, therefore we will filter TOD candidates that have an indirect dependency. We will only consider the case, where the indirect dependency is already visible in the normal order and accept that we potentially miss some indirect dependencies. Alternatively, we could also remove a TOD candidate $(T_A , T_B)$ when we also have the TOD candidate $(T_A , T_X)$, however this would remove many more TOD candidates.
+As argued in @sec:weaknesses, indirect dependencies can cause unexpected results in our analysis, therefore we will filter TOD candidates that have an indirect dependency. We will only consider the case, where the indirect dependency is already visible in the normal order and accept that we potentially miss some indirect dependencies. Alternatively, we could also remove a TOD candidate $(T_A , T_B)$ when we also have the TOD candidate $(T_A , T_X)$, however this would remove many more TOD candidates.
 
 We already have a model of all direct (potential) dependencies with the TOD candidates. We can build a transaction dependency graph $G = (V , E)$ with $V$ being all transactions and $E = { (T_A , T_B) divides (T_A , T_B) in "TOD candidates" }$. We then filter out all TOD candidates $(T_A , T_B)$ where there exists a path $T_A , T_(X_1) , dots.h , T_(X_n) , T_B$ with at least one intermediary node $T_(X_i)$.
 
@@ -712,7 +715,7 @@ Thus, we can exclude TOD candidates, where $T_B$ has no code access.
 
 == Experiment
 <experiment>
-In this section, we discuss the results of applying the TOD candidate mining methodology on a randomly sampled sequence of 100 blocks, different to the block range we used for the development of the filters. Refer to chapter @cha:reproducibility for the experiment setup and the reproducible sampling.
+In this section, we discuss the results of applying the TOD candidate mining methodology on a randomly sampled sequence of 100 blocks, different to the block range we used for the development of the filters. Refer to @cha:reproducibility for the experiment setup and the reproducible sampling.
 
 We mined the blocks from block 19830547 up to block 19830647, containing a total of 16799 transactions.
 
@@ -850,5 +853,4 @@ No generative AI tools where used in the process of researching and writing this
   target: figure.where(kind: table),
 )
 
-// TODO: why is Frontrunner "online" for usenix?
 #bibliography("refs.bib", style: "ieee")
