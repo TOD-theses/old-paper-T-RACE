@@ -1,3 +1,5 @@
+#import "@preview/fletcher:0.5.1" as fletcher: diagram, node, edge
+
 #set table(inset: 6pt, stroke: 0.4pt)
 #show table.cell.where(y: 0): strong
 
@@ -107,7 +109,7 @@
   #text(30pt)[*T-RACE*]
 
   Othmar Lechner
-])
+]
 
 #heading("Erklärung zur Verfassung der Arbeit", outlined: false, numbering: none)
 
@@ -262,7 +264,7 @@ $
   changedKeys(Delta_(T_A)) & = changedKeys(Delta_(T_B))\
   forall K in changedKeys:
   & pre(Delta_(T_A)) (K) = pre(Delta_(T_B)) (K)\
-  upright(" and ") & post(Delta_(T_B)) (K) = post(Delta_(T_B)) (K)
+  " and " & post(Delta_(T_B)) (K) = post(Delta_(T_B)) (K)
 $
 
 We define $sigma + Delta_T$ to be equal to the state $sigma$, except that every state that was changed by the execution of $T$ is overwritten with the value in $p o s t s t a t e (Delta_T)$. Similarly, $sigma - Delta_T$ is equal to the state $sigma$, except that every state that was changed by the execution of $T$ is overwritten with the value in $p r e s t a t e (Delta_T)$. Formally, these definitions are as follows:
@@ -272,17 +274,17 @@ $
     K
   ) & colon.eq cases(
     post(Delta_T) (K) & "if"  K in changedKeys(Delta_T),
-    sigma (K) & upright("otherwise")
+    sigma (K) & "otherwise"
   )\
   (sigma - Delta_T) (
     K
   ) & colon.eq cases(
     pre(Delta_T) (K) & "if" K in changedKeys(Delta_T),
-    sigma (K) &"otherwise"
+    sigma (K) & "otherwise"
   )
 $
 
-For instance, if transaction $T$ changed the storage slot 1234 at address 0xabcd from 0 to 100, then $(sigma + Delta_T) (upright("0xabcd"))_s [1234] = 100$ and $(sigma - Delta_T) (upright("0xabcd"))_s [1234] = 0$. For all other storage slots we have $(sigma + Delta_T) (a)_s [k] = sigma (a)_s [k] = (sigma - Delta_T) (a)_s [k]$.
+For instance, if transaction $T$ changed the storage slot 1234 at address 0xabcd from 0 to 100, then $(sigma + Delta_T) ("0xabcd")_s [1234] = 100$ and $(sigma - Delta_T) ("0xabcd")_s [1234] = 0$. For all other storage slots we have $(sigma + Delta_T) (a)_s [k] = sigma (a)_s [k] = (sigma - Delta_T) (a)_s [k]$.
 
 == Nodes
 <nodes>
@@ -671,14 +673,29 @@ We showed in section @sec:relevant-collisions, that nonce and code collisions ar
 <indirect-dependency>
 As argued in section @sec:weaknesses, indirect dependencies can cause unexpected results in our analysis, therefore we will filter TOD candidates that have an indirect dependency. We will only consider the case, where the indirect dependency is already visible in the normal order and accept that we potentially miss some indirect dependencies. Alternatively, we could also remove a TOD candidate $(T_A , T_B)$ when we also have the TOD candidate $(T_A , T_X)$, however this would remove many more TOD candidates.
 
-We already have a model of all direct (potential) dependencies with the TOD candidates. We can build a transaction dependency graph $G = (V , E)$ with $V$ being all transactions and $E = { (T_A , T_B) divides (T_A , T_B) in upright("TOD candidates") }$. We then filter out all TOD candidates $(T_A , T_B)$ where there exists a path $T_A , T_(X_1) , dots.h , T_(X_n) , T_B$ with at least one intermediary node $T_(X_i)$.
+We already have a model of all direct (potential) dependencies with the TOD candidates. We can build a transaction dependency graph $G = (V , E)$ with $V$ being all transactions and $E = { (T_A , T_B) divides (T_A , T_B) in "TOD candidates" }$. We then filter out all TOD candidates $(T_A , T_B)$ where there exists a path $T_A , T_(X_1) , dots.h , T_(X_n) , T_B$ with at least one intermediary node $T_(X_i)$.
 
 @fig:tod_candidate_dependency shows an example dependency graph, where transaction $A$ influences both $X$ and $B$ and $B$ is influenced by all other transactions. We would filter out the candidate $(A , B)$ as there is a path $A arrow.r X arrow.r B$, but keep $(X , B)$ and $(C , B)$.
 
-// TODO: figure, see https://typst.app/universe/package/cetz/
 #figure(
-  [],
-  caption: [ Indirect dependency graph ],
+  [
+    #text(size: 0.8em)[
+      #diagram(
+        node-stroke: .1em,
+        mark-scale: 100%,
+        edge-stroke: 0.08em,
+        node((3, 0), `A`, radius: 1.2em),
+        edge("-|>"),
+        node((2, 2), `X`, radius: 1.2em),
+        edge("-|>"),
+        node((4, 3), `B`, radius: 1.2em),
+        edge((3, 0), (4, 3), "--|>"),
+        edge("<|-"),
+        node((5, 1), `C`, radius: 1.2em),
+      )
+    ]
+  ],
+  caption: flex-caption([ Indirect dependency graph. An arrow from x to y indicates that y depends on x. A dashed arrow indicates an indirect dependency. ], [Indirect dependency graph]),
 )
 <fig:tod_candidate_dependency>
 
