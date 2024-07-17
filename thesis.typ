@@ -94,6 +94,13 @@
   long
 })
 
+#import "@preview/ctheorems:1.1.2": *
+#show: thmrules.with(qed-symbol: $square$)
+#let theorem = thmbox("theorem", "Theorem")
+#let definition = thmbox("definition", "Definition", inset: (x: 1.2em, top: 1em))
+#let proof = thmproof("proof", "Proof")
+
+
 #let pre = math.italic("prestate")
 #let post = math.italic("poststate")
 #let colls = math.italic("collisions")
@@ -382,16 +389,14 @@ Similar to the case with the block environment, this could lead to differences b
 == TOD definition
 To address the issues above, we will provide a more precise definition for TOD.
 
-// TODO: Check if there is a more typst way to do this
-#todo("Check if there is a more typst way to do this")
-#block[
-  #strong[Definition 3.1] (TOD). #emph[Consider a sequence of transactions, with $sigma$ being the world state right before $T_A$ was executed on the blockchain:]
+#definition("TOD")[
+  Consider a sequence of transactions, with $sigma$ being the world state right before $T_A$ was executed on the blockchain:
 
-  #emph[$ sigma arrow.r^(T_A) sigma_A arrow.r^(T_(X_1)) dots.h arrow.r^(T_(X_n)) sigma_(X_n) arrow.r^(T_B) sigma_B $]
+  $ sigma arrow.r^(T_A) sigma_A arrow.r^(T_(X_1)) dots.h arrow.r^(T_(X_n)) sigma_(X_n) arrow.r^(T_B) sigma_B $
 
-  #emph[Let $Delta_(T_A)$ and $Delta_(T_B)$ be the corresponding state changes from executing $T_A$ and $T_B$, and let all transactions be executed in the same block environment as they were executed on the blockchain.]
+  Let $Delta_(T_A)$ and $Delta_(T_B)$ be the corresponding state changes from executing $T_A$ and $T_B$, and let all transactions be executed in the same block environment as they were executed on the blockchain.
 
-  #emph[We say, that $(T_A , T_B)$ is TOD if and only if executing $(sigma_(X_n) - Delta_(T_A)) arrow.r^(T_B) sigma_B prime$ produces a state change $Delta_(T_B prime)$ with $Delta_(T_B) eq.not Delta_(T_B prime)$.]
+  We say, that $(T_A , T_B)$ is TOD if and only if executing $(sigma_(X_n) - Delta_(T_A)) arrow.r^(T_B) sigma_B prime$ produces a state change $Delta_(T_B prime)$ with $Delta_(T_B) eq.not Delta_(T_B prime)$.
 ]
 
 Intuitively, we take the world state exactly before $T_B$ was executed, namely $sigma_(X_n)$. We then record the state changes $Delta_(T_B)$ from executing $T_B$ directly on $sigma_(X_n)$, the same way it was executed on the blockchain. Then we simulate what would have happened if $T_A$ was not executed before $T_B$ by removing its state changes and executing $T_B$ on $sigma_(X_n) - Delta_(T_A)$. If we observe different state changes for $T_B$ when executed with and without the changes of $T_A$, then we know that $T_A$ has an impact on $T_B$ and conclude TOD between $T_A$ and $T_B$. If there are no differences between $Delta_(T_B)$ and $Delta_(T_B prime)$, then $T_B$ behaves the same regardless of $T_A$ and there is no TOD.
@@ -540,22 +545,16 @@ Therefore, the remaining attack vectors are `SSTORE`, to modify the storage of a
 
 == Everything is TOD
 Our definition of TOD is very broad and marks many transaction pairs as TOD. For instance, if a transaction $T_B$ uses some storage value for a calculation, then the execution likely depends on the transaction that previously has set this storage value. Similarly, when someone wants to transfer Ether, they can only do so when they first received that Ether. Thus, they are dependent on some transaction that gave them this Ether previously.
-
 #todo("What about block rewards?")
 
-#block[
-  #strong[Theorem 3.1]. #emph[For every transaction $T_B$ after the London upgrade#footnote[#emph[We reference the London upgrade here, as this introduced the base fee for transactions.]], there exists a transaction $T_A$ such that $(T_A , T_B)$ is TOD.]
+#theorem[For every transaction $T_B$ after the London upgrade#footnote[We reference the London upgrade here, as this introduced the base fee for transactions.], there exists a transaction $T_A$ such that $(T_A , T_B)$ is TOD.]
+#proof[
+  Consider an arbitrary transaction $T_B$ with the sender being some address $italic("sender")$. The sender must pay some upfront cost $v_0 > 0$, because they must pay a base fee. @wood_ethereum_2024[p.8-9]. Therefore, we must have $sigma italic("sender")_b gt.eq v_0$. This requires, that a previous transaction $T_A$ increased the balance of $italic("sender")$ to be high enough to pay the upfront cost, i.e. $pre(Delta_(T_A)) (italic("sender"))_b < v_0$ and $post(Delta_(T_A)) (italic("sender"))_b gt.eq v_0$.
 
-]
-#block[
-  #emph[Proof.] Consider an arbitrary transaction $T_B$ with the sender being some address $s e n d e r$. The sender must pay some upfront cost $v_0 > 0$, because they must pay a base fee. @wood_ethereum_2024[p.8-9]. Therefore, we must have $sigma (s e n d e r)_b gt.eq v_0$. This requires, that a previous transaction $T_A$ increased the balance of $s e n d e r$ to be high enough to pay the upfront cost, i.e. $p r e s t a t e (Delta_(T_A)) (s e n d e r)_b < v_0$ and $p o s t s t a t e (Delta_(T_A)) (s e n d e r)_b gt.eq v_0$.
-
-  When we calculate $sigma - Delta_(T_A)$ for our TOD definition, we would set the balance of $s e n d e r$ to $p r e s t a t e (Delta_(T_A)) (s e n d e r)_b < v_0$ and then execute $T_B$ based on this state. In this case, $T_B$ would be invalid, as the $s e n d e r$ would not have enough Ether to cover the upfront cost.~◻
-
+  When we calculate $sigma - Delta_(T_A)$ for our TOD definition, we would set the balance of $italic("sender")$ to $pre(Delta_(T_A)) (italic("sender"))_b < v_0$ and then execute $T_B$ based on this state. In this case, $T_B$ would be invalid, as the $italic("sender")$ would not have enough Ether to cover the upfront cost.
 ]
 
-#todo("Check formulation when frontrunning sections are written")
-
+#todo("Check reference when frontrunning sections are written")
 Given this property, it is clear that TOD alone is not a useful attack indicator, else we would say that every transaction has been attacked. In the following, we provide some more restrictive definitions.
 
 = TOD candidate mining
