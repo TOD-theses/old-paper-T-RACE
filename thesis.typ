@@ -2,7 +2,7 @@
 
 #set table(inset: 6pt, stroke: 0.4pt)
 #show table.cell.where(y: 0): strong
-#set document(title: "TypsT-RACEr")
+#set document(title: "T-RACE", author: "Othmar Lechner")
 #set par(justify: true)
 #set text(lang: "en", region: "UK", size: 11pt, spacing: 3pt)
 #show emph: it => {
@@ -107,11 +107,10 @@
 #let changedKeys = math.italic("changed_keys")
 
 
-#align(center)[
-  #text(30pt)[*T-RACE*]
-
-  Othmar Lechner
-]
+#for value in range(3) {
+  "Four blank pages resembling the four pages from the templates frontpage. This makes it easier to retain the PDF metadata for the bookmarks (ToC) after merging with the frontpages from the template."
+  pagebreak()
+}
 
 #heading("Erklärung zur Verfassung der Arbeit", outlined: false, numbering: none)
 

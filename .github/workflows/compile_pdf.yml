@@ -21,6 +21,12 @@ jobs:
       - name: Compile PDF
         run: typst compile thesis.typ
 
+      - name: Install pdftk
+        run: sudo apt install pdftk
+
+      - name: Replace frontpages
+        run: sh ./replace_frontpages.sh
+
       - name: Copy File
         run: |
           mkdir out
