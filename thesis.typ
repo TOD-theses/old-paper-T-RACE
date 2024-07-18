@@ -1,5 +1,13 @@
 #import "@preview/fletcher:0.5.1" as fletcher: diagram, node, edge
 
+/*
+Notable differences to the Latex template:
+- ToC not perfect (contains no Abstract, List of Figures, ...; Bibliography is small)
+- Not such a fancy new-chapter style
+- Numbered citing rerences instead of letters
+- "Figure"/"Table" 1 references are always uppercased
+*/
+
 #set table(inset: 6pt, stroke: 0.4pt)
 #show table.cell.where(y: 0): strong
 #set document(title: "T-RACE", author: "Othmar Lechner")
@@ -186,7 +194,7 @@ Similar to @wood_ethereum_2024[p.3], we will refer to the shared state as #emph[
 - #emph[code]: For contract accounts, the code is a sequence of EVM
   instructions.
 
-We denote the world state as $sigma$, the account state of an address $a$ as $sigma (a)$ and the nonce, balance, storage and code as $sigma (a)_n$, $sigma (a)_b$, $sigma (a)_s$ and $sigma (a)_c$ respectively. For the value at a storage slot $k$ we write $sigma (a)_s [k]$. We will also an alternative notation $sigma (K)$, where we combine the identifiers of a state value to a single key $K$, which simplifies further definitions. We have the following equalities between the two notations:
+We denote the world state as $sigma$, the account state of an address $a$ as $sigma (a)$ and the nonce, balance, storage and code as $sigma (a)_n$, $sigma (a)_b$, $sigma (a)_s$ and $sigma (a)_c$ respectively. For the value at a storage slot $k$ we write $sigma (a)_s [k]$. #todo("We will also *use* an alternative notation") We will also an alternative notation $sigma (K)$, where we combine the identifiers of a state value to a single key $K$, which simplifies further definitions. We have the following equalities between the two notations:
 
 $
   sigma(a)_n &= sigma(("'nonce'", a)) \
@@ -198,12 +206,12 @@ $
 == EVM
 The Ethereum Virtual Machine (EVM) is used to execute code in Ethereum. It executes instructions, that can access and modify the world state. The EVM is Turing-complete, except that it is executed with a limited amount of #emph[gas] and each instruction costs some gas. When it runs out of gas, the execution will halt. @wood_ethereum_2024[p.14] For instance, this prevents execution of infinite loops, as it would use infinitely much gas and thus exceed the gas limit.
 
-Most EVM instructions are formally defined in. @wood_ethereum_2024[p.30-38] However, the Yellowpaper currently does not include the changes from the Cancun upgrade @noauthor_history_2024, therefore we will also refer to the informal descriptions available on #link("https://www.evm.codes/")[evm.codes]. @smlxl_evm_2024
+Most EVM instructions are formally defined in #todo("... the Yellowpaper"). @wood_ethereum_2024[p.30-38] However, the Yellowpaper currently does not include the changes from the Cancun upgrade @noauthor_history_2024, therefore we will also refer to the informal descriptions available on #link("https://www.evm.codes/")[evm.codes]. @smlxl_evm_2024
 
 == Transactions
 A transaction can modify the world state by transferring Ether and executing EVM code. It must be signed by the owner of an EOA and contains following data relevant to our work:
 
-- #emph[sender]: The address of the transaction sender#footnote[The
+- #emph[sender]: The address of the #todo("... EOA that signed this transaction") transaction sender#footnote[The
   sender is implicitly given through a valid signature and the
   transaction hash. @wood_ethereum_2024[p.25-27] We are only interested
   in transactions that are included in the blockchain, thus the
@@ -246,7 +254,7 @@ For two state changes $Delta_(T_A)$ and $Delta_(T_B)$, we say that $Delta_(T_A) 
 
 We define the set of changed state keys as:
 
-$changedKeys(Delta) colon.eq {K \| pre(Delta)(K) eq.not post(Delta) (K)}$
+$ changedKeys(Delta) colon.eq {K \| pre(Delta)(K) eq.not post(Delta) (K)} $
 
 We let the equality $Delta_(T_A) = Delta_(T_B)$ be true if following holds, else $Delta_(T_A) eq.not Delta_(T_B)$:
 
@@ -312,10 +320,9 @@ In @torres_frontrunner_2021 the authors do not provide a formal definition of TO
 
 Similar to our intuitive TOD definition, they execute $T_A$ and $T_V$ in different orders and check if it affects the result. In their case, they only check the number of executed instruction, instead of the resulting state. This would miss attacks where the same instructions were executed, but the operands for these instructions in the second transaction changed because of the first transaction.
 
-#todo("Reference the frontrunning sections, when it's written")
-In @zhang_combatting_2023, they define an attack as a triple $A = angle.l T_a , T_v , T_a^p angle.r$, where $T_a$ and $T_v$ are similar to the $T_A$ and $T_B$ from our definition, and $T_a^p$ is an optional third transaction. They consider the execution orders $T_a arrow.r T_v arrow.r T_a^p$ and $T_v arrow.r T_a arrow.r T_a^p$. They monitor the transactions to check if the execution order impacts financial gains, which we will discuss later in more detail.
+In @zhang_combatting_2023, they define an attack as a triple $A = angle.l T_a , T_v , T_a^p angle.r$, where $T_a$ and $T_v$ are similar to the $T_A$ and $T_B$ from our definition, and $T_a^p$ is an optional third transaction. They consider the execution orders $T_a arrow.r T_v arrow.r T_a^p$ and $T_v arrow.r T_a arrow.r T_a^p$. They monitor the transactions to check if the execution order impacts financial gains, which we will discuss later in more detail. #todo("Reference the frontrunning sections, when it's written")
 
-We note that if these two execution orders result in different states, this is not because of the last transaction $T_a^p$, but because of a TOD between $T_a$ and $T_v$. As we always execute $T_a^p$, and transaction execution is deterministic, it only gives a different result if the execution of $T_a$ and $T_v$ gave a different result. Therefore, if the execution order results in different financial gains, then $T_a$ and $T_v$ must be TOD.
+We note that if these two execution orders result in different states, this is not because of the last transaction $T_a^p$, but because of a TOD between $T_a$ and $T_v$. As we always execute $T_a^p$ #todo("... last"), and transaction execution is deterministic, it only gives a different result if the execution of $T_a$ and $T_v$ gave a different result. Therefore, if the execution order results in different financial gains, then $T_a$ and $T_v$ must be TOD.
 
 == Imprecise definitions
 Our intuitive definition of TOD, and the related definitions shown above, are not precise on the semantics of a reordering of transactions and their executions. These make it impossible to apply exactly the same methodology without analyzing the source code related to the papers. We detect three issues, where the definition is not precise enough and show how these were differently interpreted by the two papers.
@@ -386,7 +393,7 @@ The emulator is initialized with the block `front_runner["blockNumber"]-1` and n
 Similar to the case with the block environment, this could lead to differences between the emulation and the results from the blockchain, when $T_A$ or $T_V$ are impacted by a previous transaction in the same block.
 
 == TOD definition
-To address the issues above, we will provide a more precise definition for TOD.
+To address the issues above, we will provide a more precise definition for TOD #todo("... that tries to be as close to the execution that happened on the blockchain, while also minimizing the impact of intermediary transactions on the analysis results.")
 
 #definition("TOD")[
   Consider a sequence of transactions, with $sigma$ being the world state right before $T_A$ was executed on the blockchain:
@@ -562,7 +569,7 @@ In this chapter, we discuss how we search for potential TODs in the Ethereum blo
 == TOD candidate finding
 We make use of the RPC method `debug_traceBlockByNumber`, which allows replaying all transactions of a block the same way they were originally executed. With the `prestateTracer` config, this method also outputs, which state has been accessed, and using the `diffMode` config, also which state has been modified#footnote[When running the prestateTracer in diffMode, several fields are only implicit in the response. We need to make these fields explicit for further analysis. Refer to the documentation or the source code for further details.].
 
-By inspecting the source code from the tracers for Reth@paradigm_revm-inspectors_2024 and results from the RPC call, we found out, that for every touched account it always includes the account’s balance, nonce and code in the prestate. For instance, even when only the balance was accessed, it will also include the nonce in the prestate#footnote[I opened a #link("https://github.com/ethereum/go-ethereum/pull/30081")[pull request] to clarify this behaviour and now this is also reflected in the documentation@noauthor_go-ethereum_2024-1.]. Therefore, we do not know precisely which state has been accessed, which can be a source of false positives for collisions.
+By inspecting the source code from the tracers for Reth@paradigm_revm-inspectors_2024 and results from the RPC call, we found out, that for every touched account it always includes the account’s balance, nonce and code in the prestate. For instance, even when only the balance was accessed, it will also include the nonce in the prestate#footnote[I opened a #todo("link visibility") #link("https://github.com/ethereum/go-ethereum/pull/30081")[pull request] to clarify this behaviour and now this is also reflected in the documentation@noauthor_go-ethereum_2024-1.]. Therefore, we do not know precisely which state has been accessed, which can be a source of false positives for collisions.
 
 We store all the accesses and modifications in a database and then query for accesses and writes that have the same state key, giving us a list of collisions. We then use these collisions to obtain a preliminary set of TOD candidates.
 
