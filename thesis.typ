@@ -18,6 +18,7 @@ Notable differences to the Latex template:
 }
 #show par: set block(spacing: 14pt)
 #set page(numbering: none)
+#show link: underline
 
 #let todo(content) = {
   text("[TODO: " + content + "]", fill: red)
@@ -766,6 +767,8 @@ One goal of this paper is to create a diverse set of attacks for our benchmark. 
 
 == Deduplication
 TBD.
+
+#todo("ethutils GPL license")
 
 = Trace analysis
 = TOD Attack results
